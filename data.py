@@ -12,9 +12,9 @@ import util
 
 
 class InputType(enum.Enum):
-    IMAGE = enum.auto()
-    PREDICTION = enum.auto()
-    COMBINED = enum.auto()
+    IMAGE = 'image'
+    PREDICTION = 'prediction'
+    COMBINED = 'combined'
 
     @classmethod
     def channels(input_type: "InputType"):
@@ -27,7 +27,7 @@ class InputType(enum.Enum):
 class CMBDataset(Dataset):
     def __init__(
         self,
-        base_path,
+        base_path: str,
         glob_pattern: str = None,
         split_file: str = None,
         split_partition: str = None,
@@ -36,15 +36,17 @@ class CMBDataset(Dataset):
         input_type: InputType = InputType.IMAGE,
     ) -> None:
         if glob_pattern is None:
-            assert split_file is not None
-            assert split_partition is not None
+            if split_file is None or split_partition is None:
+                raise ValueError
 
             with open(split_file, "r") as f:
-                splits = yaml.load(f)
+                splits = yaml.load(f, Loader=yaml.Loader)
                 base_file_names = splits[split_partition]
+                print(f'{split_partition} partition of size {len(base_file_names)}')
 
         if split_file is None or split_partition is None:
-            assert glob_pattern is not None
+            if glob_pattern is None:
+                raise ValueError
 
             file_names = glob.glob(os.path.join(base_path, "labelsTs", glob_pattern))
             base_file_names = [
