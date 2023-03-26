@@ -1,3 +1,5 @@
 venv/
 logs/
 __pycache__/
+.mypy_cache/
+.lr_find*
