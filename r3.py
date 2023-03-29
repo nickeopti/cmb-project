@@ -230,8 +230,11 @@ class ResNet(nn.Module):
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
                 conv1x1(self.inplanes, planes * block.expansion, stride),
+                # conv1x1(self.inplanes, planes * block.expansion, 1),
+                # torch.nn.MaxPool3d(stride),
                 norm_layer(planes * block.expansion),
             )
+            # TODO: Try replacing with max-pool
 
         layers = []
         layers.append(

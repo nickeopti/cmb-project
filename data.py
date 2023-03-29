@@ -128,6 +128,7 @@ class LazyBoxVal(CMBDataset):
         return (
             torch.from_numpy(x).float(),
             torch.from_numpy(components.astype(np.int32)),
+            torch.from_numpy(prediction).float(),
             torch.from_numpy(components_comp.astype(np.int32)),
             torch.from_numpy(labels_components.astype(np.int32)),
             [list(enumerate(boxes, start=1))],

@@ -44,13 +44,14 @@ if __name__ == "__main__":
     dataset_train = arguments.add_arguments(parser, "dataset", data.LazyBox)(
         split_partition="train"
     )
-    dataset_val = arguments.add_arguments(parser, "dataset", data.LazyBoxVal)(
+    dataset_val = arguments.add_arguments(parser, "dataset", data.LazyBox)(
         split_partition="val"
     )
 
     activation_function = arguments.add_options_from_module(
         parser, "activation", torch.nn.modules.activation, torch.nn.Module
     )
+    model = arguments.add_arguments(parser, "model", CMBClassifier)(activation_function=activation_function)
 
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
@@ -61,7 +62,7 @@ if __name__ == "__main__":
         args=args,
         logger=logger,
         log_every_n_steps=1,
-        check_val_every_n_epoch=10,
+        check_val_every_n_epoch=50,
         callbacks=[
             ModelCheckpoint(
                 monitor="train_loss",
@@ -72,8 +73,6 @@ if __name__ == "__main__":
     )
 
     log_config(args, trainer)
-
-    model = CMBClassifier(activation_function=activation_function)
 
     train_data_loader = DataLoader(
         dataset_train,
@@ -86,6 +85,7 @@ if __name__ == "__main__":
     )
 
     if args.learning_rate is None:
+        model.learning_rate = 2  # Apparently necessary...
         lr_finder = trainer.tuner.lr_find(model, train_data_loader)
         lr_fig = lr_finder.plot(suggest=True)
         lr_fig.savefig(os.path.join(trainer.logger.log_dir, "lr.png"))

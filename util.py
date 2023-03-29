@@ -96,24 +96,37 @@ def extract_image_box(image, box):
 
 
 def compute_object_metrics(labels_components, predictions_components):
-    # labels_components, n_labels = get_components(labels, return_N=True)
-    # predictions_components, n_predictions = get_components(predictions, return_N=True)
     n_labels = len(np.unique(labels_components)) - 1
-    n_predictions = len(np.unique(predictions_components)) - 1
+    unique_predictions = np.unique(predictions_components)
+    n_predictions = len(unique_predictions) - 1
     labels_components_ones = labels_components.copy()
     labels_components_ones[labels_components_ones != 0] = 1
 
     for p in range(n_labels, 0, -1):
         labels_components[labels_components == p] = PRIMES[p]
+    unique_labels = np.unique(labels_components)
+    unique_labels = unique_labels[unique_labels != 0]
+
+    assert all(label in PRIMES for label in unique_labels)
+
     for p in range(n_predictions, 0, -1):
-        predictions_components[predictions_components == p] = PRIMES[n_labels + p]
+        predictions_components[predictions_components == unique_predictions[p]] = PRIMES[n_labels + p]
+    unique_predictions = np.unique(predictions_components)
+    unique_predictions = unique_predictions[unique_predictions != 0]
+
+    assert all(pred in PRIMES for pred in unique_predictions)
+    assert not (set(unique_labels).intersection(unique_predictions))
     
     unique = np.unique(labels_components * predictions_components)
     unique = unique[unique != 0]
-    
-    n_tp = sum(np.any(unique % PRIMES[p] == 0) for p in range(n_labels))
+
+    # print(f'{n_labels=}, {n_predictions=}')
+    # print(f'{unique_labels=}')
+    # print(f'{np.unique(predictions_components)=}')
+    # print(f'{unique=}')
+
+    n_tp = sum(np.any(unique % p == 0) for p in unique_labels)
     n_fn = n_labels - n_tp
-    # n_fp = n_predictions - len(unique)
     n_fp = n_predictions - len(np.unique(predictions_components * labels_components_ones)) + 1
 
     return n_tp, n_fp, n_fn, n_labels
